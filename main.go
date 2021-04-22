@@ -1,7 +1,7 @@
 package main
 
-import "fmt"
+import "blogapi/api"
 
 func main() {
-	fmt.Println("hello world")
+	api.Run()
 }
