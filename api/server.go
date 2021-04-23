@@ -2,6 +2,7 @@ package api
 
 import (
 	"blogapi/api/router"
+	"blogapi/auto"
 	"blogapi/config"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 
 func Run() {
 	config.Load()
+	auto.Load()
 	fmt.Printf("server running.. at port %d", config.PORT)
 	listen(config.PORT)
 }
