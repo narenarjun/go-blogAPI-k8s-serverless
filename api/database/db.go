@@ -15,6 +15,5 @@ func Connect() (*gorm.DB, error) {
 		log.Fatalf("error connecting to the database,%d", err)
 		return nil, err
 	}
-
 	return db, nil
 }

@@ -32,7 +32,6 @@ func (r *repositoryUsersCRUD) Save(user models.User) (models.User, error) {
 	if channels.OK(done) {
 		return user, nil
 	}
-
 	return models.User{}, err
 }
 
