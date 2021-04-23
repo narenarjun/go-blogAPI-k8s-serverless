@@ -10,6 +10,7 @@ var (
 	PORT     = 4000
 	DBURL    = ""
 	DBDRIVER = ""
+	TOKENKEY []byte
 )
 
 func Load() {
@@ -33,5 +34,13 @@ func Load() {
 	if !er1 {
 		log.Fatalln("DATABASE_URL environment variable is missing.")
 	}
+
+	key, er2 := os.LookupEnv("JWT_SECRET")
+
+	if !er2 {
+		log.Fatalln("JWT_SECRET enviroment variable is missing")
+	}
+
+	TOKENKEY = []byte(key)
 
 }
