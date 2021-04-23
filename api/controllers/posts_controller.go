@@ -1,12 +1,14 @@
 package controllers
 
 import (
+	"blogapi/api/auth"
 	"blogapi/api/database"
 	"blogapi/api/models"
 	"blogapi/api/repository"
 	"blogapi/api/repository/crud"
 	"blogapi/api/responses"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -36,6 +38,17 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	uid, err := auth.ExtractTokenID(r)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	if uid != post.AuthorID {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
+		return
+	}
+
 	db, err := database.Connect()
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
@@ -50,7 +63,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 			responses.ERROR(w, http.StatusInternalServerError, err)
 			return
 		}
-		w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.RequestURI, post.ID))
+		w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.URL.Path, post.ID))
 		responses.JSON(w, http.StatusCreated, post)
 	}(repo)
 }
@@ -130,6 +143,17 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	uid, err := auth.ExtractTokenID(r)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	if uid != post.AuthorID {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
+		return
+	}
+
 	db, err := database.Connect()
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
@@ -157,6 +181,12 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
 	}
+
+	uid, err := auth.ExtractTokenID(r)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnauthorized, err)
+		return
+	}
 	db, err := database.Connect()
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
@@ -167,7 +197,7 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	repo := crud.NewRepositoryPostsCRUD(db)
 
 	func(postRepository repository.PostRepository) {
-		_, err := postRepository.Delete(pid)
+		_, err := postRepository.Delete(pid, uid)
 		if err != nil {
 			responses.ERROR(w, http.StatusBadRequest, err)
 			return

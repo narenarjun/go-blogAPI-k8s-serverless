@@ -22,7 +22,7 @@ func (r *repositoryPostsCRUD) Save(post models.Post) (models.Post, error) {
 	done := make(chan bool)
 	go func(ch chan<- bool) {
 		defer close(ch)
-		err = r.db.Debug().Model(&models.Post{}).Create(&post).Error
+		err = r.db.Model(&models.Post{}).Create(&post).Error
 		if err != nil {
 			ch <- false
 			return
@@ -42,14 +42,14 @@ func (r *repositoryPostsCRUD) FindAll() ([]models.Post, error) {
 	done := make(chan bool)
 	go func(ch chan<- bool) {
 		defer close(ch)
-		err = r.db.Debug().Model(&models.Post{}).Limit(100).Find(&posts).Error
+		err = r.db.Model(&models.Post{}).Limit(100).Find(&posts).Error
 		if err != nil {
 			ch <- false
 			return
 		}
 		if len(posts) > 0 {
 			for i, _ := range posts {
-				err := r.db.Debug().Model(&models.User{}).Where("id = ?", posts[i].AuthorID).Take(&posts[i].Author).Error
+				err := r.db.Model(&models.User{}).Where("id = ?", posts[i].AuthorID).Take(&posts[i].Author).Error
 				if err != nil {
 					ch <- false
 					return
@@ -72,14 +72,14 @@ func (r *repositoryPostsCRUD) FindByID(pid uint64) (models.Post, error) {
 	done := make(chan bool)
 	go func(ch chan<- bool) {
 		defer close(ch)
-		err = r.db.Debug().Model(&models.Post{}).Where("id = ?", pid).Take(&post).Error
+		err = r.db.Model(&models.Post{}).Where("id = ?", pid).Take(&post).Error
 		if err != nil {
 			ch <- false
 			return
 		}
 
 		if post.ID != 0 {
-			err = r.db.Debug().Model(&models.User{}).Where("id = ?", post.AuthorID).Take(&post.Author).Error
+			err = r.db.Model(&models.User{}).Where("id = ?", post.AuthorID).Take(&post.Author).Error
 
 			if err != nil {
 				ch <- false
@@ -102,7 +102,7 @@ func (r *repositoryPostsCRUD) Update(pid uint64, post models.Post) (int64, error
 	done := make(chan bool)
 	go func(ch chan<- bool) {
 		defer close(ch)
-		rs = r.db.Debug().Model(&models.Post{}).Where("id = ?", pid).Take(&models.Post{}).UpdateColumns(
+		rs = r.db.Model(&models.Post{}).Where("id = ?", pid).Take(&models.Post{}).UpdateColumns(
 			map[string]interface{}{
 				"title":      post.Title,
 				"content":    post.Content,
@@ -126,13 +126,13 @@ func (r *repositoryPostsCRUD) Update(pid uint64, post models.Post) (int64, error
 	return 0, rs.Error
 }
 
-func (r *repositoryPostsCRUD) Delete(pid uint64) (int64, error) {
+func (r *repositoryPostsCRUD) Delete(pid uint64, uid uint32) (int64, error) {
 	// var err error
 	var rs *gorm.DB
 	done := make(chan bool)
 	go func(ch chan<- bool) {
 		defer close(ch)
-		rs = r.db.Debug().Model(&models.Post{}).Where("id = ?", pid).Take(&models.Post{}).Delete(&models.Post{})
+		rs = r.db.Model(&models.Post{}).Where("id = ? and author_id = ?", pid, uid).Take(&models.Post{}).Delete(&models.Post{})
 		ch <- true
 	}(done)
 
